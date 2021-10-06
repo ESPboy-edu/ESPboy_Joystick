@@ -10,13 +10,13 @@
 
 #define SAVE_MARKER 0xAAEE
 
-#define REFRESH_RATE 10
-#define CIRCLE_ELEMENTS 10
+#define REFRESH_RATE 20
+#define CIRCLE_ELEMENTS 20
 #define BOARDER_SPACE 5
 
 #define MAX_CIRCLE_RADIUS 20
 #define MIN_CIRCLE_RADIUS 5
-#define MAX_CIRCLE_CHANGE_SPEED 7
+#define MAX_CIRCLE_CHANGE_SPEED 4
 #define MIN_CIRCLE_CHANGE_SPEED 2
 
 
@@ -107,23 +107,25 @@ void redrawScreen(){
   for (uint16_t i=0; i<CIRCLE_ELEMENTS; i++)
     if(circleArray[i].r>0) 
       myESPboy.tft.fillCircle(circleArray[i].x, circleArray[i].y, circleArray[i].r, circleArray[i].color);
-  myESPboy.tft.drawFastVLine(cross.x, cross.y-5, 10, TFT_WHITE);
-  myESPboy.tft.drawFastHLine(cross.x-5, cross.y, 10, TFT_WHITE);
+  myESPboy.tft.drawFastVLine(cross.x, cross.y-5, 11, TFT_WHITE);
+  myESPboy.tft.drawFastHLine(cross.x-5, cross.y, 11, TFT_WHITE);
 }
 
 
 void processData(){
-  if (myESPboy.getKeys())
+  if (myESPboy.getKeys()){
+    myESPboy.playTone(100,40);
     for (uint16_t i=0; i<CIRCLE_ELEMENTS; i++)
       if(circleArray[i].r == 0){
         circleArray[i].x = cross.x;
         circleArray[i].y = cross.y;  
         circleArray[i].r ++;
-        circleArray[i].rt = random(MAX_CIRCLE_RADIUS)+MIN_CIRCLE_RADIUS;
-        circleArray[i].delta = random(MAX_CIRCLE_CHANGE_SPEED)+MIN_CIRCLE_CHANGE_SPEED;
+        circleArray[i].rt = random(MAX_CIRCLE_RADIUS) + MIN_CIRCLE_RADIUS;
+        circleArray[i].delta = random(MAX_CIRCLE_CHANGE_SPEED) + MIN_CIRCLE_CHANGE_SPEED;
         circleArray[i].color = colors[random(sizeof(colors)/sizeof(uint32_t))];
         break;
-      }     
+      }
+  }
 
   for (uint16_t i=0; i<CIRCLE_ELEMENTS; i++)
    if (circleArray[i].r != 0){
@@ -133,12 +135,12 @@ void processData(){
    }
 
    int32_t deltaMoveX, deltaMoveY;
-   deltaMoveX = ((joyParam.lastX-joyParam.minAdsX)-(joyParam.maxAdsX-joyParam.minAdsX)/2)/1000;
-   deltaMoveY = ((joyParam.lastY-joyParam.minAdsY)-(joyParam.maxAdsY-joyParam.minAdsY)/2)/1000;
-   if(abs(deltaMoveX)>2 && cross.x + deltaMoveX*2 < 128 - BOARDER_SPACE && cross.x + deltaMoveX*2 > BOARDER_SPACE) 
-     cross.x += deltaMoveX*2;
-   if(abs(deltaMoveY)>2 && cross.y + deltaMoveY*2 < 128 - BOARDER_SPACE && cross.y + deltaMoveY*2 > BOARDER_SPACE) 
-     cross.y += deltaMoveY*2;
+   deltaMoveX = ((joyParam.lastX-joyParam.minAdsX)-(joyParam.maxAdsX-joyParam.minAdsX)/2)/500;
+   deltaMoveY = ((joyParam.lastY-joyParam.minAdsY)-(joyParam.maxAdsY-joyParam.minAdsY)/2)/500;
+   if(abs(deltaMoveX)>4 && cross.x + deltaMoveX < 128 - BOARDER_SPACE && cross.x + deltaMoveX > BOARDER_SPACE) 
+     cross.x += deltaMoveX;
+   if(abs(deltaMoveY)>4 && cross.y + deltaMoveY < 128 - BOARDER_SPACE && cross.y + deltaMoveY > BOARDER_SPACE) 
+     cross.y += deltaMoveY;
 }
 
 
