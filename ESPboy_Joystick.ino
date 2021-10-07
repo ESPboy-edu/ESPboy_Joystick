@@ -10,7 +10,7 @@
 
 #define SAVE_MARKER 0xAAEE
 
-#define REFRESH_RATE 20
+#define REFRESH_RATE 30
 #define CIRCLE_ELEMENTS 20
 #define BOARDER_SPACE 5
 
@@ -19,9 +19,12 @@
 #define MAX_CIRCLE_CHANGE_SPEED 4
 #define MIN_CIRCLE_CHANGE_SPEED 2
 
+#define SPRITE_WIDTH  128
+#define SPRITE_HEIGHT 128
 
 ADS1115 ADS(0x48);
 ESPboyInit myESPboy;
+TFT_eSprite sprite = TFT_eSprite(&myESPboy.tft); 
 
 uint32_t colors[5]={TFT_GREEN, TFT_BLUE, TFT_RED, TFT_YELLOW, TFT_MAGENTA};
 
@@ -103,12 +106,12 @@ void joyUpdate(){
 
 
 void redrawScreen(){
-  myESPboy.tft.fillScreen(TFT_BLACK);
+  sprite.fillScreen(TFT_BLACK);
   for (uint16_t i=0; i<CIRCLE_ELEMENTS; i++)
     if(circleArray[i].r>0) 
-      myESPboy.tft.fillCircle(circleArray[i].x, circleArray[i].y, circleArray[i].r, circleArray[i].color);
-  myESPboy.tft.drawFastVLine(cross.x, cross.y-5, 11, TFT_WHITE);
-  myESPboy.tft.drawFastHLine(cross.x-5, cross.y, 11, TFT_WHITE);
+      sprite.fillCircle(circleArray[i].x, circleArray[i].y, circleArray[i].r, circleArray[i].color);
+  sprite.drawFastVLine(cross.x, cross.y-5, 11, TFT_WHITE);
+  sprite.drawFastHLine(cross.x-5, cross.y, 11, TFT_WHITE);
 }
 
 
@@ -137,10 +140,14 @@ void processData(){
    int32_t deltaMoveX, deltaMoveY;
    deltaMoveX = ((joyParam.lastX-joyParam.minAdsX)-(joyParam.maxAdsX-joyParam.minAdsX)/2)/500;
    deltaMoveY = ((joyParam.lastY-joyParam.minAdsY)-(joyParam.maxAdsY-joyParam.minAdsY)/2)/500;
-   if(abs(deltaMoveX)>4 && cross.x + deltaMoveX < 128 - BOARDER_SPACE && cross.x + deltaMoveX > BOARDER_SPACE) 
+   if (abs(deltaMoveX)>4){
      cross.x += deltaMoveX;
-   if(abs(deltaMoveY)>4 && cross.y + deltaMoveY < 128 - BOARDER_SPACE && cross.y + deltaMoveY > BOARDER_SPACE) 
+     if(cross.x>127) cross.x = 127;
+     if(cross.x<0) cross.x = 0;}     
+   if (abs(deltaMoveY)>4){
      cross.y += deltaMoveY;
+     if(cross.y>127) cross.y = 127;
+     if(cross.y<0) cross.y = 0;}
 }
 
 
@@ -164,6 +171,7 @@ void setup() {
   Serial.begin(115200);
   EEPROM.begin(sizeof(saveData));
   myESPboy.begin("Joystick"); //Init ESPboy
+  sprite.createSprite(SPRITE_WIDTH, SPRITE_HEIGHT);
   if (myESPboy.getKeys()) joystickCalibration();
   ADS.begin();
   ADS.setDataRate(7); 
@@ -174,11 +182,11 @@ void setup() {
 
 void loop(){
  static uint32_t tmrFPS=0;
-  delay(1);
   if(millis()-tmrFPS > 1000/REFRESH_RATE){
     tmrFPS = millis();
     joyUpdate();
     processData();
     redrawScreen();
+    sprite.pushSprite(0, 0);
   }
 }
